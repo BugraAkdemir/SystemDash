@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PC Sistem Bilgisi Paneli</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+  body {
+    background: #121212;
+    color: #eee;
+    font-family: 'Inter', sans-serif;
+    margin: 0; padding: 20px;
+  }
+  h1 {
+    font-weight: 600;
+    font-size: 2.8rem;
+    margin-bottom: 1rem;
+  }
+  .system-info {
+    font-size: 1.3rem;
+    margin-bottom: 2rem;
+    background: #1e1e1e;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 600px;
+  }
+  .system-info p {
+    margin: 0.5rem 0;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    max-width: 900px;
+    background: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  thead {
+    background: #2a2a2a;
+  }
+  th, td {
+    padding: 15px 20px;
+    text-align: left;
+    font-size: 1.1rem;
+  }
+  th {
+    font-weight: 600;
+  }
+  tbody tr:hover {
+    background: #333;
+  }
+  @media (max-width: 768px) {
+    body {
+      padding: 10px;
+    }
+    .system-info, table {
+      max-width: 100%;
+    }
+    th, td {
+      padding: 10px 12px;
+      font-size: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>PC Sistem Bilgisi Paneli</h1>
+
+  <div class="system-info" id="systemInfo">
+    <p><strong>İşletim Sistemi:</strong> <span id="system">Yükleniyor...</span></p>
+    <p><strong>CPU Kullanımı:</strong> <span id="cpu">Yükleniyor...</span>%</p>
+    <p><strong>RAM Kullanımı:</strong> <span id="ram">Yükleniyor...</span>%</p>
+  </div>
+
+  <h2>En Çok CPU Kullanan 5 Program</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>PID</th>
+        <th>Program</th>
+        <th>CPU %</th>
+        <th>RAM (MB)</th>
+      </tr>
+    </thead>
+    <tbody id="processTableBody">
+      <tr><td colspan="4" style="text-align:center; padding: 20px;">Yükleniyor...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/stats');
+        if (!res.ok) throw new Error('Veri alınamadı');
+        const data = await res.json();
+
+        document.getElementById('system').textContent = data.system;
+        document.getElementById('cpu').textContent = data.cpu.toFixed(1);
+        document.getElementById('ram').textContent = data.ram.toFixed(1);
+
+        const tbody = document.getElementById('processTableBody');
+        tbody.innerHTML = '';
+        if (data.processes.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Gösterilecek program yok</td></tr>';
+        } else {
+          data.processes.forEach(p => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+              <td>${p.pid}</td>
+              <td>${p.name}</td>
+              <td>${p.cpu.toFixed(1)}</td>
+              <td>${p.ram.toFixed(2)}</td>
+            `;
+            tbody.appendChild(tr);
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchStats();
+    setInterval(fetchStats, 5000); // 5 saniyede bir yenile
+  </script>
+</body>
+</html>
